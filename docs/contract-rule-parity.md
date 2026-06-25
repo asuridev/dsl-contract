@@ -41,7 +41,7 @@ stricter · **?** needs per-rule verification (documented TODO).
 | Event DTOs | `validateEventDtos` BC-090..094 | inline | ? | |
 | Domain events | `validateDomainEvents` / payload types BC-100..122 | inline + `[G15]` trigger | ? | payload type resolution — verify BC-122 ↔ reader |
 | Read models | `validateReadModels` | inline | ? | |
-| Repositories | `validateRepositories` + method/qualifier BC-150..170 + `repositoryQualifierMatchesBoolean` | inline (preflight) + `booleanQualifierMatches` | = | boolean-flag qualifiers (`find/count{Flag}By…` over a `Boolean` prop) accepted both sides — Phase 1 no longer false-flags BC-161. Note: Phase 1 still does not validate `exists{Qualifier}By`/`search{Qualifier}` (Phase 2 does) — documented follow-up |
+| Repositories | `validateRepositories` + method/qualifier BC-150..170 + `repositoryQualifierMatchesBoolean` | inline (preflight) + `booleanQualifierMatches` | = | boolean-flag qualifiers (`find/count{Flag}By…` over a `Boolean` prop) accepted both sides — Phase 1 no longer false-flags BC-161. `exists{Qualifier}By` and `search{Qualifier}` qualifier validation now mirrored in Phase 1 (BC-161) too — **verified** parity with reader `qualifiedExists`/`qualifiedSearch` (returns shape + status/boolean qualifier resolution) |
 | Properties / readOnly / type | `validateProperties` etc. BC-130..141 | inline | = | readOnly+defaultValue:generated early-identity both |
 | Java identifier safety | `checkJavaIdentifier` BC-095 / case-collision BC-096 / Decimal scale≤precision BC-097 | `java-identifiers.js` `assertJavaIdentifier` + collision/Decimal checks in `bc-yaml-reader.js` | = | names emitted verbatim (bc, aggregate, entity, property, VO, projection, eventDto, enum value, error arg) must be valid Java identifiers and not reserved words; two names that collapse to the same camelCase field / snake_case column rejected; `DECIMAL(p,s)` requires p≥1 and 0≤s≤p |
 | Actor cross-validation | `validateUseCaseReferences` | `[G14]` | = | actor must exist in system.yaml actors[] |
@@ -52,9 +52,11 @@ parity** (identical whitelists), and mixed multipart is aligned on both sides. T
 that did exist (duplicated cross-BC validators, incl. the `INT-007 from` severity mismatch) is resolved by
 GAP-1 (this package).
 
-**TODO (documented, not high-impact):** verify the `?` rows rule-by-rule — domain rules coverage, event
-payload type resolution (BC-122 ↔ reader), projections additionalSources, eventDtos, read models, and the
-repository qualified-find qualifier set. Each is a follow-up; none is known to break the pipeline today.
+**TODO (documented, not high-impact):** verify the remaining `?` rows rule-by-rule — domain rules
+coverage, event payload type resolution (BC-122 ↔ reader), projections additionalSources, eventDtos, and
+read models. Each is a follow-up; none is known to break the pipeline today. The repository qualified-find
+qualifier set is now **closed**: Phase 1 BC-161 mirrors the reader's `exists{Qualifier}By` and
+`search{Qualifier}` checks (added 2026-06; covered by the canasta conformance guard + `dsl validate`).
 
 ## Part B — Advanced field semantic parity (GAP-5)
 
