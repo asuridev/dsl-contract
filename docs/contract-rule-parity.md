@@ -43,6 +43,7 @@ stricter · **?** needs per-rule verification (documented TODO).
 | Read models | `validateReadModels` | inline | ? | |
 | Repositories | `validateRepositories` + method/qualifier BC-150..170 | inline (preflight) | ? | qualified-find preflight both sides — verify qualifier set |
 | Properties / readOnly / type | `validateProperties` etc. BC-130..141 | inline | = | readOnly+defaultValue:generated early-identity both |
+| Java identifier safety | `checkJavaIdentifier` BC-095 / case-collision BC-096 / Decimal scale≤precision BC-097 | `java-identifiers.js` `assertJavaIdentifier` + collision/Decimal checks in `bc-yaml-reader.js` | = | names emitted verbatim (bc, aggregate, entity, property, VO, projection, eventDto, enum value, error arg) must be valid Java identifiers and not reserved words; two names that collapse to the same camelCase field / snake_case column rejected; `DECIMAL(p,s)` requires p≥1 and 0≤s≤p |
 | Actor cross-validation | `validateUseCaseReferences` | `[G14]` | = | actor must exist in system.yaml actors[] |
 
 **High-impact findings:** none in the verified rows. The likeliest break class — a use-case input
