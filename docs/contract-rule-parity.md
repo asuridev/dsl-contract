@@ -37,11 +37,11 @@ stricter · **?** needs per-rule verification (documented TODO).
 | Errors | `validateErrors` / `validateErrorArgs` BC-050..054 | inline | = | |
 | Domain rules & aggregates | `validateDomainRulesAndAggregates` BC-060..068 | inline | ? | verify rule-type coverage |
 | Value objects (+ cycles) | `validateValueObjects` / `…Cycles` BC-070..074 | inline (GEN-003 cycle) | = | cycle detection both sides |
-| Projections | `validateProjections` / `…AdditionalSources` BC-080..086 | inline + INT-010..012/027 (shared) | ? | additionalSources/upsertStrategy — see Part B |
+| Projections | `validateProjections` / `…AdditionalSources` BC-080..086 + key whitelist BC-012 | inline + `ALLOWED_PROJECTION_KEYS` + INT-010..012/027 (shared) | = | additionalSources/upsertStrategy — see Part B; projection-level key whitelist now both sides (rejects typos like `persistant`) |
 | Event DTOs | `validateEventDtos` BC-090..094 | inline | ? | |
 | Domain events | `validateDomainEvents` / payload types BC-100..122 | inline + `[G15]` trigger | ? | payload type resolution — verify BC-122 ↔ reader |
 | Read models | `validateReadModels` | inline | ? | |
-| Repositories | `validateRepositories` + method/qualifier BC-150..170 | inline (preflight) | ? | qualified-find preflight both sides — verify qualifier set |
+| Repositories | `validateRepositories` + method/qualifier BC-150..170 + `repositoryQualifierMatchesBoolean` | inline (preflight) + `booleanQualifierMatches` | = | boolean-flag qualifiers (`find/count{Flag}By…` over a `Boolean` prop) accepted both sides — Phase 1 no longer false-flags BC-161. Note: Phase 1 still does not validate `exists{Qualifier}By`/`search{Qualifier}` (Phase 2 does) — documented follow-up |
 | Properties / readOnly / type | `validateProperties` etc. BC-130..141 | inline | = | readOnly+defaultValue:generated early-identity both |
 | Java identifier safety | `checkJavaIdentifier` BC-095 / case-collision BC-096 / Decimal scale≤precision BC-097 | `java-identifiers.js` `assertJavaIdentifier` + collision/Decimal checks in `bc-yaml-reader.js` | = | names emitted verbatim (bc, aggregate, entity, property, VO, projection, eventDto, enum value, error arg) must be valid Java identifiers and not reserved words; two names that collapse to the same camelCase field / snake_case column rejected; `DECIMAL(p,s)` requires p≥1 and 0≤s≤p |
 | Actor cross-validation | `validateUseCaseReferences` | `[G14]` | = | actor must exist in system.yaml actors[] |
