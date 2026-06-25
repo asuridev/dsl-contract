@@ -6,15 +6,41 @@ phases of the pipeline:
 - **Phase 1** — `dsl-design-system` (validates design YAML: `dsl validate`)
 - **Phase 2** — `dsl-springboot-generator` (consumes design YAML: `dsl-springboot build`)
 
-Both repos depend on this package via a `file:` link:
+## Installation
+
+Both repos depend on this package via a **git URL pinned to a tag**, so a fresh
+`git clone` + `npm install` of either consumer resolves it from GitHub — no
+sibling checkout, no registry, no `.npmrc`:
 
 ```json
-"@dsl/contract": "file:../dsl-contract"
+"@dsl/contract": "git+https://github.com/asuridev/dsl-contract.git#v0.1.0"
 ```
 
-> `file:` copies into `node_modules` at `npm install` time. After editing this
-> package, run `npm install` in each consumer repo (or use `npm link` during
-> development) to pick up the change.
+The repo is **public**, so the install needs no credentials (works in CI too).
+npm clones it and installs its own dependency (`fs-extra`) automatically.
+
+### Local development of this package
+
+A git-URL dependency does **not** reflect local edits to this folder. To iterate
+on the validators while developing a consumer, use `npm link`:
+
+```bash
+cd dsl-contract && npm link
+cd ../dsl-springboot-generator && npm link @dsl/contract   # (and/or dsl-design-system)
+# … edit dsl-contract/src/* and re-run the consumer …
+npm install   # undo the link, back to the pinned git version
+```
+
+(Or temporarily set `"@dsl/contract": "file:../dsl-contract"` in the consumer
+without committing it.)
+
+### Releasing a new version
+
+1. Edit `src/*`, bump `version` in `package.json`.
+2. `git commit`, `git tag vX.Y.Z`, `git push && git push --tags`.
+3. In each consumer: update the `#vX.Y.Z` ref, `npm install`, commit the lockfile.
+
+For a fully immutable pin you can reference a commit SHA instead of a tag.
 
 ## Why this package exists (GAP-1)
 
