@@ -1,10 +1,10 @@
 {
   "name": "@dsl/contract",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Single source of truth for the DSL YAML contract validators shared by dsl-design-system (Phase 1) and dsl-springboot-generator (Phase 2).",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"@dsl/contract has no own tests — exercised by both consumer repos' suites\" && exit 0"
+    "test": "node test/input-anatomy.test.js"
   },
   "license": "UNLICENSED",
   "private": true,

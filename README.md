@@ -59,6 +59,7 @@ must stay green):
 | `src/openapi-usecase-validator.js` | Phase 2 | Had the `[G8] Range[T]` handling (maps an input to `{name}Min`/`{name}Max` OpenAPI params); Phase 1 lacked it. |
 | `src/openapi-contract.js` | Either (identical) | Only a trailing-newline difference. |
 | `src/naming.js` | Phase 1 | Minimal `toKebabCase` (null-guarded); only `toKebabCase` is used by the validators. |
+| `src/input-anatomy-validator.js` | **Superset of both** | Per-input anatomy rules, formerly duplicated in Phase 1 `bc-yaml-validator.js` and Phase 2 `bc-yaml-reader.js` (GAP-3). Reconciled: the multipart base-type check (was Phase 2 only) is now enforced both sides, and `Decimal` is accepted for `max` (was Phase 1 only). Added in v0.2.0. |
 
 ## Public API (`src/index.js`)
 
@@ -69,8 +70,16 @@ const {
   expectedEventChannel,
   validateOpenApiUseCases,
   validateOpenApiDocumentSchemas,
+  validateUseCaseInputAnatomy,   // per-input anatomy rules (multipart/File, maxSize, …)
 } = require('@dsl/contract');
 ```
+
+`validateUseCaseInputAnatomy(bcYaml)` takes a parsed `<bc>.yaml` and returns the same
+`Diagnostic[]` shape (`{ code, level, message, location }`) using the `BC-*` codes.
+Phase 1 merges those diagnostics into its own array; Phase 2's reader calls it and
+`fail()`s on the first `level: 'error'` diagnostic (preserving its "Failed to load BC …"
+behavior). The module also exports the reconciled constants `ALLOWED_UC_INPUT_KEYS`,
+`ALLOWED_UC_INPUT_SOURCES`, `MULTIPART_FORM_SCALARS`, `RANGE_ORDERABLE_TYPES`.
 
 ## Out of scope
 

@@ -8,8 +8,10 @@ Cross-phase audit of the YAML contract enforced by each side:
 
 > The cross-BC integration / OpenAPI contract validators (`integration-validator`,
 > `openapi-usecase-validator`, `openapi-contract`) are **no longer duplicated** — they live in this
-> `@dsl/contract` package and are the single source of truth (GAP-1). This document covers only the
-> per-BC anatomy rules, which remain per repo because Phase 2's reader is entangled with the
+> `@dsl/contract` package and are the single source of truth (GAP-1). As of v0.2.0 the **use-case input
+> anatomy** rules (multipart/File, `maxSize`, source enum, `max`, `SearchText`, `Range`) are also
+> centralized here in `input-anatomy-validator.js` (`validateUseCaseInputAnatomy`) — see Part A. The
+> remaining per-BC anatomy rules still live per repo because Phase 2's reader is entangled with the
 > generator's model (GAP-3), plus a field-semantics parity table (GAP-5).
 
 Status legend: **=** parity (both enforce equivalent rule) · **P1>** Phase 1 stricter · **P2>** Phase 2
@@ -22,8 +24,8 @@ stricter · **?** needs per-rule verification (documented TODO).
 | Document header | `validateDocumentHeader` BC-001 | inline `bc` checks | = | |
 | Enums | `validateEnums` BC-005..008 | inline (enum name/value/dupes) | = | identifier + duplicate checks both sides |
 | Use case core | `validateUseCases` BC-010..020 | `[G18]` strict key whitelist | = | UC key whitelists identical |
-| Use case inputs | `validateUseCaseInputs` BC-021..028 | inline + `[G5]` `[G11]` | **=** | **verified**: `source` enum and input-key whitelist byte-identical (`body,path,query,authContext,header,multipart`) |
-| Multipart parts | BC-024 (File + scalar form parts) | `[G12]` | **=** | **verified**: both accept mixed multipart (File + String/enum/number); maxSize/contentTypes only on File |
+| Use case inputs | **shared** `validateUseCaseInputAnatomy` (BC-012/020..026, BC-090) | **shared** (adapter → `fail()`) | **=** centralized (GAP-1) | source enum + input-key whitelist + `max`/`SearchText`/`Range` now single-source in `@dsl/contract`; Phase 1 still runs its own `validateType` (BC-090 type grammar, GAP-5) per input |
+| Multipart parts | **shared** `validateUseCaseInputAnatomy` BC-024 | **shared** | **=** centralized (GAP-1) | File + scalar/enum form parts; `maxSize` size-string, `partName` safe-id, `contentTypes` MIME — reconciled superset (base-type check added to P1; `Decimal` accepted in `max` both sides) |
 | Pagination | `validateUseCasePagination` | `[G7]` | = | sortable/defaultSort |
 | Authorization | `validateUseCaseAuthorization` | `[G3]` | = | rolesAnyOf/permissions/scopes/ownership |
 | Idempotency | `validateUseCaseIdempotency` | `[G2]` | = | header/ttl/storage |
@@ -32,7 +34,7 @@ stricter · **?** needs per-rule verification (documented TODO).
 | Async | `validateUseCaseAsync` | `[G10]` | = | mode/statusEndpoint |
 | Multi-aggregate saga | `validateUseCaseMultiAggregate` | `[G6]` | = | steps/onFailure/compensate |
 | FK / lookups / validations | `validateUseCaseFkLookupsValidations` | inline + `[G20]` | ? | cross-field guards — verify conditional FK parity |
-| SearchText / Range | `validateSearchTextFields` | `[G8]` | = | fields[] for SearchText; orderable inner for Range |
+| SearchText / Range | **shared** `validateUseCaseInputAnatomy` (BC-026/BC-090) | **shared** | = centralized (GAP-1) | fields[] for SearchText; orderable inner for Range |
 | Returns | `validateUseCaseReturns` | `[G24]` Void normalize | = | BinaryStream only on queries |
 | Errors | `validateErrors` / `validateErrorArgs` BC-050..054 | inline | = | |
 | Domain rules & aggregates | `validateDomainRulesAndAggregates` BC-060..068 | inline | ? | verify rule-type coverage |
@@ -46,11 +48,11 @@ stricter · **?** needs per-rule verification (documented TODO).
 | Java identifier safety | `checkJavaIdentifier` BC-095 / case-collision BC-096 / Decimal scale≤precision BC-097 | `java-identifiers.js` `assertJavaIdentifier` + collision/Decimal checks in `bc-yaml-reader.js` | = | names emitted verbatim (bc, aggregate, entity, property, VO, projection, eventDto, enum value, error arg) must be valid Java identifiers and not reserved words; two names that collapse to the same camelCase field / snake_case column rejected; `DECIMAL(p,s)` requires p≥1 and 0≤s≤p |
 | Actor cross-validation | `validateUseCaseReferences` | `[G14]` | = | actor must exist in system.yaml actors[] |
 
-**High-impact findings:** none in the verified rows. The likeliest break class — a use-case input
-`source`/key that Phase 1 accepts but Phase 2 rejects (or vice versa) — was checked and is in **exact
-parity** (identical whitelists), and mixed multipart is aligned on both sides. The structural divergence
-that did exist (duplicated cross-BC validators, incl. the `INT-007 from` severity mismatch) is resolved by
-GAP-1 (this package).
+**High-impact findings:** none. The likeliest break class — a use-case input `source`/key/multipart shape
+that Phase 1 accepts but Phase 2 rejects (or vice versa) — is now **structurally impossible** for the input
+anatomy rules: both phases call the same `validateUseCaseInputAnatomy` (v0.2.0), so they cannot drift. The
+earlier structural divergences (duplicated cross-BC validators incl. the `INT-007 from` severity mismatch;
+the `maxSize` byte-vs-unit-string drift) are resolved by GAP-1 (this package).
 
 **TODO (documented, not high-impact):** verify the remaining `?` rows rule-by-rule — domain rules
 coverage, event payload type resolution (BC-122 ↔ reader), projections additionalSources, eventDtos, and
