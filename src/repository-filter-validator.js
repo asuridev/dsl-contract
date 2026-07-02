@@ -92,10 +92,29 @@ function validateRepositoryFilters(bcYaml) {
       .filter((a) => a && a.name)
       .map((a) => [a.name, a]),
   );
+  const voByName = new Map(
+    (Array.isArray(doc.valueObjects) ? doc.valueObjects : [])
+      .filter((v) => v && v.name)
+      .map((v) => [v.name, v]),
+  );
 
-  const isScalarComparableType = (type) => {
+  // A field is LIKE-comparable if it is a scalar canonical/enum, OR a
+  // single-property value object. A 1-property VO flattens to exactly one column
+  // named after the field (Phase 2 jpa-entity-generator: `String sku`), so LIKE on
+  // it is unambiguous — we resolve it to its inner scalar. Multi-property VOs (e.g.
+  // Money → amount+currency) expand to N columns and stay non-scalar: filter those
+  // via the expanded column name instead. `seen` guards against VO reference cycles.
+  const isScalarComparableType = (type, seen) => {
     const base = typeBase(type);
-    return COMPARABLE_SCALAR_TYPES.has(base) || enumNames.has(base);
+    if (COMPARABLE_SCALAR_TYPES.has(base) || enumNames.has(base)) return true;
+    const vo = voByName.get(base);
+    if (vo && Array.isArray(vo.properties) && vo.properties.length === 1) {
+      const guard = seen || new Set();
+      if (guard.has(base)) return false;
+      guard.add(base);
+      return isScalarComparableType(vo.properties[0].type, guard);
+    }
+    return false;
   };
 
   const repositories = Array.isArray(doc.repositories) ? doc.repositories : [];

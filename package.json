@@ -1,6 +1,6 @@
 {
   "name": "@dsl/contract",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Single source of truth for the DSL YAML contract validators shared by dsl-design-system (Phase 1) and dsl-springboot-generator (Phase 2).",
   "main": "src/index.js",
   "scripts": {
