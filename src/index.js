@@ -32,6 +32,14 @@ const {
   RANGE_ORDERABLE_TYPES,
 } = require('./input-anatomy-validator');
 
+// Repository query-method filter rules (LIKE only on scalar aggregate fields).
+// Formerly inline in Phase 2's bc-yaml-reader.js and absent from Phase 1, causing
+// designs to pass at design time and fail at build (parity gap). Now shared.
+const {
+  validateRepositoryFilters,
+  COMPARABLE_SCALAR_TYPES,
+} = require('./repository-filter-validator');
+
 // OpenAPI contract helpers — used by the validators above and, in Phase 2, by the
 // controller/openapi generators (buildOpenApiOperationMap). Re-exported so the
 // generator does not need a local copy of openapi-contract.js.
@@ -48,5 +56,7 @@ module.exports = {
   ALLOWED_UC_INPUT_SOURCES,
   MULTIPART_FORM_SCALARS,
   RANGE_ORDERABLE_TYPES,
+  validateRepositoryFilters,
+  COMPARABLE_SCALAR_TYPES,
   ...openApiContract,
 };
